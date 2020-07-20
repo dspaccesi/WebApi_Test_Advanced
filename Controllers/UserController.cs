@@ -77,20 +77,30 @@ namespace EvaluacionAdvanced.Controllers
         }
 
         [HttpPut]
-        public async Task<DTO_User> EditUserAsync([FromBody] DTO_User userDto)
+        public async Task<IActionResult> EditUserAsync([FromBody] DTO_User userDto)
         {
             try
             {
+                var userByUserName = await _userService.GetUserByUserNameAsync(userDto.UserName);
+                if (userByUserName != null)
+                {
+                    if (userByUserName.UserId != userDto.UserID)
+                    {
+                        return Conflict("The entered user name already exist.");
+                    }
+                }
+
                 var userToUpdate = _mapper.Map<DTO_User, User>(userDto);
                 var userUpdated = await _userService.Update(userToUpdate);
                 var response = _mapper.Map<User, DTO_User>(userUpdated);
-                return response;
+                return Ok(response);
             }
             catch (Exception exception)
             {
                 throw exception;
             }
         }
+
         [HttpDelete]
         public async Task<DTO_User> DeleteUserAsync([FromBody] DTO_User userDto)
         {
